@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savory Station - Food Ordering System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #ff9a9e, #fad0c4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .food-card {
+            transition: transform 0.3s;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .food-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .cart-badge {
+            position: relative;
+            top: -10px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-pending { background-color: #ffc107; color: #000; }
+        .status-confirmed { background-color: #17a2b8; color: #fff; }
+        .status-preparing { background-color: #007bff; color: #fff; }
+        .status-on_transit { background-color: #fd7e14; color: #fff; }
+        .status-delivered { background-color: #6c757d; color: #fff; }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            padding-bottom: 20px;
+        }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: #dee2e6;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #dee2e6;
+        }
+
+        .timeline-dot.active {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: var(--primary);
+            margin: 2rem 0 1.5rem;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-gradient:hover {
+            opacity: 0.9;
+            color: white;
+        }
+
+        .payment-box label {
+            font-weight: 500;
+        }
+
+        .payment-details {
+            font-size: 0.9rem;
+        }
+
+        .payment-details input {
+            margin-bottom: 0.4rem;
+        }
+
+        .navbar-text {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#" onclick="showSection('menu')">🍕 Savory Station</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="mainNav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-section="menu" onclick="showSection('menu')">
+                            <i class="fas fa-utensils"></i> Menu
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="cart" onclick="showSection('cart')">
+                            <i class="fas fa-shopping-cart"></i> Cart
+                            <span class="badge bg-danger cart-badge" id="cartCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="orders" onclick="showSection('orders')">
+                            <i class="fas fa-truck"></i> My Orders
+                        </a>
+                    </li>
+                    <li class="nav-item" id="adminNavItem" style="display:none;">
+                        <a class="nav-link" href="#" data-section="admin" onclick="showSection('admin')">
+                            <i class="fas fa-tasks"></i> Admin
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="loginLink" onclick="handleLoginClick()">
+                            <i class="fas fa-user"></i> <span id="loginText">Login</span>
+                        </a>
+                    </li>
+                </ul>
+                <span class="navbar-text ms-3 text-white-50">
+                    <i class="fas fa-circle-user"></i>
+                    <span id="userBadge">Guest</span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Welcome to Savory Station</h1>
+            <p class="lead">Delicious food delivered to your doorstep</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container mb-5">
+        <!-- MENU -->
+        <div id="menuSection">
+            <h2 class="section-title"><i class="fas fa-utensils"></i> Our Menu</h2>
+            <div class="row" id="menuItems"></div>
+        </div>
+
+        <!-- CART -->
+        <div id="cartSection" style="display:none;">
+            <h2 class="section-title"><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+            <div id="cartItems"></div>
+            <div id="cartSummary"></div>
+        </div>
+
+        <!-- ORDERS -->
+        <div id="ordersSection" style="display:none;">
+            <h2 class="section-title"><i class="fas fa-truck"></i> Track Your Orders</h2>
+            <div id="ordersList"></div>
+        </div>
+
+        <!-- ADMIN -->
+        <div id="adminSection" style="display:none;">
+            <h2 class="section-title"><i class="fas fa-tasks"></i> Manage Orders (Admin)</h2>
+            <div id="adminOrders"></div>
+        </div>
+    </div>
+
+    <!-- ORDER SUCCESS MODAL -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle"></i> Order Placed Successfully!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">Thank you for your order!</h4>
+                    <p class="text-muted">Your order number is:</p>
+                    <div class="alert alert-info">
+                        <strong id="orderNumber"></strong>
+                    </div>
+                    <p>You can track your order in "My Orders" section</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="showSection('orders')" data-bs-dismiss="modal">
+                        <i class="fas fa-truck"></i> Track Order
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="showSection('menu')" data-bs-dismiss="modal">
+                        Continue Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-sign-in-alt"></i> Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        Demo credentials:<br>
+                        User: <strong>user</strong> / <strong>123456</strong><br>
+                        Admin: <strong>admin</strong> / <strong>admin123</strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Login as</label><br>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="loginRole" id="loginRoleUser" value="user" checked>
+                            <label class="form-check-label" for="loginRoleUser">User</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="loginRole" id="loginRoleAdmin" value="admin">
+                            <label class="form-check-label" for="loginRoleAdmin">Admin</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Username / Email</label>
+                        <input type="text" class="form-control" id="loginEmail" placeholder="e.g. user or admin">
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" placeholder="Enter password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-gradient" onclick="loginUser()"><i class="fas fa-right-to-bracket"></i> Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const STATUS_FLOW = ['pending', 'confirmed', 'preparing', 'on_transit', 'delivered'];
+
+        const foodItems = [
+            {id: 1, name: 'Chicken Kacchi Biryani', price: 210, description: 'Fragrant dum-cooked biryani with tender chicken', image: '🍛'},
+            {id: 2, name: 'Chicken BBQ', price: 140, description: 'Smoky, tender grilled chicken', image: '🍗'},
+            {id: 3, name: 'Beef Rezala', price: 650, description: 'Juicy beef in creamy yogurt sauce', image: '🥩'},
+            {id: 4, name: 'Lamb Nihari', price: 550, description: 'Slow-cooked lamb in rich gravy', image: '🍖'},
+            {id: 5, name: 'French Fries', price: 150, description: 'Crispy golden fries', image: '🍟'},
+            {id: 6, name: 'Nachos', price: 150, description: 'Crunchy chips with cheese', image: '🧀'},
+            {id: 7, name: 'Pizza', price: 650, description: 'Fresh toppings on crispy crust', image: '🍕'},
+            {id: 8, name: 'Fried Chicken', price: 250, description: 'Crispy fried chicken pieces', image: '🍗'},
+            {id: 9, name: 'Grilled Chicken', price: 135, description: 'Healthy grilled chicken', image: '🍖'},
+            {id: 10, name: 'Burger', price: 350, description: 'Juicy burger with special sauce', image: '🍔'}
+        ];
+
+        const accounts = [
+            {id: 1, name: 'Regular User', username: 'user', email: 'user@example.com', password: '123456', role: 'user'},
+            {id: 2, name: 'Admin User', username: 'admin', email: 'admin@example.com', password: 'admin123', role: 'admin'}
+        ];
+
+        let cart = [];
+        let orders = [];
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromStorage();
+            loadAuthFromSession();
+            renderMenu();
+            updateCartCount();
+            updateAuthUI();
+
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'orders' || e.key === 'cart') {
+                    loadFromStorage();
+                    updateCartCount();
+                    if (document.getElementById('cartSection').style.display !== 'none') {
+                        renderCart();
+                    }
+                    if (document.getElementById('ordersSection').style.display !== 'none') {
+                        renderOrders();
+                    }
+                    if (document.getElementById('adminSection').style.display !== 'none') {
+                        renderAdminOrders();
+                    }
+                }
+            });
+        });
+
+        function loadFromStorage() {
+            const savedCart = localStorage.getItem('cart');
+            const savedOrders = localStorage.getItem('orders');
+            cart = savedCart ? JSON.parse(savedCart) : [];
+            orders = savedOrders ? JSON.parse(savedOrders) : [];
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            localStorage.setItem('orders', JSON.stringify(orders));
+        }
+
+        function loadAuthFromSession() {
+            const savedUser = sessionStorage.getItem('currentUser');
+            currentUser = savedUser ? JSON.parse(savedUser) : null;
+        }
+
+        function saveAuthToSession() {
+            if (currentUser) {
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            } else {
+                sessionStorage.removeItem('currentUser');
+            }
+        }
+
+        function updateAuthUI() {
+            const userBadge = document.getElementById('userBadge');
+            const loginText = document.getElementById('loginText');
+            const adminNavItem = document.getElementById('adminNavItem');
+
+            if (currentUser) {
+                userBadge.textContent = currentUser.name + (currentUser.role === 'admin' ? ' (Admin)' : '');
+                loginText.textContent = 'Logout';
+                adminNavItem.style.display = currentUser.role === 'admin' ? 'block' : 'none';
+            } else {
+                userBadge.textContent = 'Guest';
+                loginText.textContent = 'Login';
+                adminNavItem.style.display = 'none';
+            }
+        }
+
+        function handleLoginClick() {
+            if (currentUser) {
+                if (confirm('Do you want to logout?')) {
+                    currentUser = null;
+                    saveAuthToSession();
+                    updateAuthUI();
+                    showSection('menu');
+                }
+            } else {
+                const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+                modal.show();
+            }
+        }
+
+        function loginUser() {
+            const identifier = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const role = document.querySelector('input[name="loginRole"]:checked').value;
+
+            if (!identifier || !password) {
+                alert('Please enter username/email and password.');
+                return;
+            }
+
+            const user = accounts.find(function(u) {
+                return (u.username === identifier || u.email === identifier) &&
+                       u.password === password &&
+                       u.role === role;
+            });
+
+            if (!user) {
+                alert('Invalid credentials.');
+                return;
+            }
+
+            currentUser = { id: user.id, name: user.name, role: user.role };
+            saveAuthToSession();
+            updateAuthUI();
+
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+
+            const modalEl = document.getElementById('loginModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+        }
+
+        function showSection(section) {
+            document.getElementById('menuSection').style.display = 'none';
+            document.getElementById('cartSection').style.display = 'none';
+            document.getElementById('ordersSection').style.display = 'none';
+            document.getElementById('adminSection').style.display = 'none';
+
+            const links = document.querySelectorAll('#mainNav .nav-link[data-section]');
+            links.forEach(function(link) {
+                if (link.getAttribute('data-section') === section) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            if (section === 'menu') {
+                document.getElementById('menuSection').style.display = 'block';
+                renderMenu();
+            } else if (section === 'cart') {
+                document.getElementById('cartSection').style.display = 'block';
+                renderCart();
+            } else if (section === 'orders') {
+                document.getElementById('ordersSection').style.display = 'block';
+                renderOrders();
+            } else if (section === 'admin') {
+                document.getElementById('adminSection').style.display = 'block';
+                renderAdminOrders();
+            }
+        }
+
+        function renderMenu() {
+            const menuHtml = foodItems.map(function(item) {
+                return `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card food-card">
+                        <div class="card-body text-center">
+                            <div style="font-size: 5rem;">${item.image}</div>
+                            <h5 class="card-title mt-2">${item.name}</h5>
+                            <p class="card-text text-muted small">${item.description}</p>
+                            <h6 class="text-success fw-bold">TK ${item.price.toFixed(2)}</h6>
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text">Qty</span>
+                                <input type="number" class="form-control text-center" id="qty-${item.id}" value="1" min="1" max="10">
+                            </div>
+                            <button class="btn btn-gradient btn-sm w-100" onclick="addToCart(${item.id})">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            document.getElementById('menuItems').innerHTML = menuHtml;
+        }
+
+        function addToCart(itemId) {
+            const item = foodItems.find(function(f) { return f.id === itemId; });
+            const qtyInput = document.getElementById('qty-' + itemId);
+            const quantity = parseInt(qtyInput.value, 10) || 1;
+
+            const existingItem = cart.find(function(c) { return c.id === itemId; });
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    description: item.description,
+                    image: item.image,
+                    quantity: quantity
+                });
+            }
+
+            saveToStorage();
+            updateCartCount();
+
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed top-0 end-0 p-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="toast show" role="alert">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Success!</strong>
+                        <button type="button" class="btn-close btn-close-white" onclick="this.closest('.toast').parentElement.remove()"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${item.name} added to cart!
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+
+        function updateCartCount() {
+            const count = cart.reduce(function(sum, item) { return sum + item.quantity; }, 0);
+            document.getElementById('cartCount').textContent = count;
+        }
+
+        function renderCart() {
+            if (currentUser && currentUser.role === 'admin') {
+                document.getElementById('cartItems').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-shield" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h4 class="mt-3">Admin cannot place orders</h4>
+                        <p>Use a user account in another tab to order food.</p>
+                    </div>
+                `;
+                document.getElementById('cartSummary').innerHTML = '';
+                return;
+            }
+
+            if (cart.length === 0) {
+                document.getElementById('cartItems').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-cart" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h4 class="mt-3">Your cart is empty</h4>
+                        <p>Add some delicious items from our menu!</p>
+                        <button class="btn btn-gradient" onclick="showSection('menu')">
+                            <i class="fas fa-utensils"></i> Browse Menu
+                        </button>
+                    </div>
+                `;
+                document.getElementById('cartSummary').innerHTML = '';
+                return;
+            }
+
+            const cartHtml = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Item</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${cart.map(function(item, index) {
+                                return `
+                                <tr>
+                                    <td>
+                                        <span style="font-size: 1.5rem;">${item.image}</span>
+                                        <strong>${item.name}</strong>
+                                    </td>
+                                    <td>TK ${item.price.toFixed(2)}</td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" style="width:70px;"
+                                               value="${item.quantity}" min="1" max="10"
+                                               onchange="updateQuantity(${index}, this.value)">
+                                    </td>
+                                    <td>TK ${(item.price * item.quantity).toFixed(2)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            const total = cart.reduce(function(sum, item) {
+                return sum + (item.price * item.quantity);
+            }, 0);
+
+            const summaryHtml = `
+                <div class="card mt-4">
+                    <div class="card-body payment-box">
+                        <div class="row gy-3">
+                            <div class="col-md-6">
+                                <h5>Order Summary</h5>
+                                <p class="mb-1">Items: TK ${total.toFixed(2)}</p>
+                                <p class="mb-1">Delivery: TK 0.00</p>
+                                <h6 class="mt-3">Total: TK ${total.toFixed(2)}</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-credit-card"></i> Payment Method
+                                </label>
+                                <p class="text-muted small mb-2">Choose your preferred payment option.</p>
+
+                                <div class="payment-methods">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="pay_cod" value="Cash on Delivery">
+                                        <label class="form-check-label" for="pay_cod">
+                                            Cash on Delivery (Pay when the food arrives)
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="pay_card" value="Card">
+                                        <label class="form-check-label" for="pay_card">
+                                            Debit/Credit Card (Visa / MasterCard)
+                                        </label>
+                                    </div>
+                                    <div class="ms-4 mt-2 payment-details" id="cardDetails" style="display:none;">
+                                        <input type="text" class="form-control form-control-sm" id="cardHolder" placeholder="Card holder name">
+                                        <input type="text" class="form-control form-control-sm" id="cardNumber" placeholder="Card number">
+                                        <div class="d-flex gap-2">
+                                            <input type="text" class="form-control form-control-sm" id="cardExpiry" placeholder="MM/YY">
+                                            <input type="password" class="form-control form-control-sm" id="cardCvv" placeholder="CVV">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="pay_bkash" value="bKash">
+                                        <label class="form-check-label" for="pay_bkash">
+                                            bKash
+                                        </label>
+                                    </div>
+                                    <div class="ms-4 mt-2 payment-details" id="bkashDetails" style="display:none;">
+                                        <input type="text" class="form-control form-control-sm" id="bkashNumber" placeholder="bKash number">
+                                        <input type="text" class="form-control form-control-sm" id="bkashTrx" placeholder="Transaction ID">
+                                    </div>
+
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="pay_nagad" value="Nagad">
+                                        <label class="form-check-label" for="pay_nagad">
+                                            Nagad
+                                        </label>
+                                    </div>
+                                    <div class="ms-4 mt-2 payment-details" id="nagadDetails" style="display:none;">
+                                        <input type="text" class="form-control form-control-sm" id="nagadNumber" placeholder="Nagad number">
+                                        <input type="text" class="form-control form-control-sm" id="nagadTrx" placeholder="Transaction ID">
+                                    </div>
+
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="pay_bank" value="Bank Transfer">
+                                        <label class="form-check-label" for="pay_bank">
+                                            Bank Transfer
+                                        </label>
+                                    </div>
+                                    <div class="ms-4 mt-2 payment-details" id="bankDetails" style="display:none;">
+                                        <input type="text" class="form-control form-control-sm" id="bankName" placeholder="Bank name">
+                                        <input type="text" class="form-control form-control-sm" id="bankAccountLast4" placeholder="Last 4 digits of account">
+                                        <input type="text" class="form-control form-control-sm" id="bankTrx" placeholder="Transaction ID / Reference">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 text-md-end text-center mt-3">
+                                <button class="btn btn-outline-danger me-2" onclick="clearCart()">
+                                    <i class="fas fa-trash"></i> Clear Cart
+                                </button>
+                                <button class="btn btn-gradient" onclick="placeOrder()">
+                                    <i class="fas fa-check"></i> Place Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('cartItems').innerHTML = cartHtml;
+            document.getElementById('cartSummary').innerHTML = summaryHtml;
+            setupPaymentMethodListeners();
+        }
+
+        function setupPaymentMethodListeners() {
+            const radios = document.querySelectorAll('input[name="paymentMethod"]');
+            if (!radios.length) return;
+
+            const cardDetails = document.getElementById('cardDetails');
+            const bkashDetails = document.getElementById('bkashDetails');
+            const nagadDetails = document.getElementById('nagadDetails');
+            const bankDetails = document.getElementById('bankDetails');
+
+            function showDetails(value) {
+                cardDetails.style.display = value === 'Card' ? 'block' : 'none';
+                bkashDetails.style.display = value === 'bKash' ? 'block' : 'none';
+                nagadDetails.style.display = value === 'Nagad' ? 'block' : 'none';
+                bankDetails.style.display = value === 'Bank Transfer' ? 'block' : 'none';
+            }
+
+            radios.forEach(function(r) {
+                r.addEventListener('change', function() {
+                    showDetails(this.value);
+                });
+            });
+        }
+
+        function updateQuantity(index, quantity) {
+            cart[index].quantity = parseInt(quantity, 10) || 1;
+            saveToStorage();
+            updateCartCount();
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveToStorage();
+            updateCartCount();
+            renderCart();
+        }
+
+        function clearCart() {
+            if (confirm('Are you sure you want to clear your cart?')) {
+                cart = [];
+                saveToStorage();
+                updateCartCount();
+                renderCart();
+            }
+        }
+
+        function placeOrder() {
+            if (cart.length === 0) return;
+
+            if (!currentUser || currentUser.role !== 'user') {
+                alert('Please login with a customer (user) account to place an order.');
+                return;
+            }
+
+            const methodInput = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!methodInput) {
+                alert('Please select a payment method.');
+                return;
+            }
+
+            const paymentMethod = methodInput.value;
+            let paymentStatus = 'pending';
+            let paymentDetails = {};
+
+            if (paymentMethod === 'Cash on Delivery') {
+                paymentStatus = 'unpaid (COD)';
+            } else if (paymentMethod === 'Card') {
+                const cardHolder = document.getElementById('cardHolder').value.trim();
+                const cardNumber = document.getElementById('cardNumber').value.trim();
+                const cardExpiry = document.getElementById('cardExpiry').value.trim();
+                const cardCvv = document.getElementById('cardCvv').value.trim();
+
+                if (!cardHolder || !cardNumber || cardNumber.length < 8 || !cardExpiry || !cardCvv) {
+                    alert('Please enter valid card details.');
+                    return;
+                }
+
+                paymentStatus = 'paid';
+                paymentDetails = {
+                    type: 'Card',
+                    holder: cardHolder,
+                    last4: cardNumber.slice(-4)
+                };
+            } else if (paymentMethod === 'bKash') {
+                const phone = document.getElementById('bkashNumber').value.trim();
+                const trx = document.getElementById('bkashTrx').value.trim();
+                if (!phone || !trx) {
+                    alert('Please enter bKash number and transaction ID.');
+                    return;
+                }
+                paymentStatus = 'paid';
+                paymentDetails = { type: 'bKash', phone: phone, trx: trx };
+            } else if (paymentMethod === 'Nagad') {
+                const phone = document.getElementById('nagadNumber').value.trim();
+                const trx = document.getElementById('nagadTrx').value.trim();
+                if (!phone || !trx) {
+                    alert('Please enter Nagad number and transaction ID.');
+                    return;
+                }
+                paymentStatus = 'paid';
+                paymentDetails = { type: 'Nagad', phone: phone, trx: trx };
+            } else if (paymentMethod === 'Bank Transfer') {
+                const bankName = document.getElementById('bankName').value.trim();
+                const last4 = document.getElementById('bankAccountLast4').value.trim();
+                const trx = document.getElementById('bankTrx').value.trim();
+                if (!bankName || !last4 || !trx) {
+                    alert('Please enter bank name, account last 4 digits and transaction reference.');
+                    return;
+                }
+                paymentStatus = 'paid';
+                paymentDetails = { type: 'Bank Transfer', bankName: bankName, last4: last4, trx: trx };
+            }
+
+            const orderId = 'ORD' + Date.now();
+            const total = cart.reduce(function(sum, item) {
+                return sum + (item.price * item.quantity);
+            }, 0);
+
+            const order = {
+                id: orderId,
+                items: cart.map(function(it) {
+                    return {
+                        id: it.id,
+                        name: it.name,
+                        price: it.price,
+                        quantity: it.quantity,
+                        image: it.image
+                    };
+                }),
+                total: total,
+                date: new Date().toISOString(),
+                status: 'pending',
+                customer: { id: currentUser.id, name: currentUser.name, role: currentUser.role },
+                paymentMethod: paymentMethod,
+                paymentStatus: paymentStatus,
+                paymentDetails: paymentDetails
+            };
+
+            orders.unshift(order);
+            cart = [];
+            saveToStorage();
+            updateCartCount();
+            renderCart();
+
+            document.getElementById('orderNumber').textContent = orderId;
+            const modal = new bootstrap.Modal(document.getElementById('successModal'));
+            modal.show();
+        }
+
+        function renderOrders() {
+            const listEl = document.getElementById('ordersList');
+
+            if (!currentUser) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-lock" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h4 class="mt-3">Login required</h4>
+                        <p>Please login to view your orders.</p>
+                        <button class="btn btn-gradient" onclick="handleLoginClick()">
+                            <i class="fas fa-user"></i> Login
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let visibleOrders;
+            if (currentUser.role === 'admin') {
+                visibleOrders = orders;
+            } else {
+                visibleOrders = orders.filter(function(o) {
+                    return o.customer && o.customer.id === currentUser.id;
+                });
+            }
+
+            if (visibleOrders.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-truck" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h4 class="mt-3">No orders found</h4>
+                        <p>You don't have any orders yet.</p>
+                        <button class="btn btn-gradient" onclick="showSection('menu')">
+                            <i class="fas fa-utensils"></i> Start Ordering
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const ordersHtml = visibleOrders.map(function(order) {
+                const statusClass = 'status-' + order.status;
+                const statusSteps = STATUS_FLOW;
+                const currentStep = statusSteps.indexOf(order.status);
+                const paymentText = order.paymentMethod
+                    ? order.paymentMethod + ' (' + (order.paymentStatus || 'pending') + ')'
+                    : 'Not set';
+
+                return `
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <strong>Order #${order.id}</strong><br>
+                                    <small class="text-muted">${new Date(order.date).toLocaleString()}</small><br>
+                                    <small class="text-muted">Customer: ${order.customer && order.customer.name ? order.customer.name : 'Unknown'}</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Total: TK ${order.total.toFixed(2)}</strong><br>
+                                    <small class="text-muted">Payment: ${paymentText}</small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="status-badge ${statusClass}">
+                                        ${order.status === 'on_transit' ? 'ON TRANSIT' : order.status.toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Order Items:</h6>
+                                    <ul class="list-unstyled">
+                                        ${order.items.map(function(item) {
+                                            return `
+                                            <li class="mb-2">
+                                                <span style="font-size: 1.2rem;">${item.image}</span>
+                                                ${item.name} x ${item.quantity}
+                                                <span class="text-muted">(TK ${(item.price * item.quantity).toFixed(2)})</span>
+                                            </li>`;
+                                        }).join('')}
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Order Progress:</h6>
+                                    <div class="timeline">
+                                        ${statusSteps.map(function(step, index) {
+                                            return `
+                                            <div class="timeline-item">
+                                                <div class="timeline-dot ${index <= currentStep ? 'active' : ''}"></div>
+                                                <div><strong>${
+                                                    step === 'on_transit'
+                                                        ? 'On Transit'
+                                                        : step.charAt(0).toUpperCase() + step.slice(1)
+                                                }</strong></div>
+                                                <small class="text-muted">
+                                                    ${
+                                                        step === 'pending' ? 'Order received' :
+                                                        step === 'confirmed' ? 'Restaurant confirmed' :
+                                                        step === 'preparing' ? 'Food being prepared' :
+                                                        step === 'on_transit' ? 'Order is on the way' :
+                                                        'Order completed'
+                                                    }
+                                                </small>
+                                            </div>`;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listEl.innerHTML = ordersHtml;
+        }
+
+        function renderAdminOrders() {
+            const adminEl = document.getElementById('adminOrders');
+
+            if (!currentUser || currentUser.role !== 'admin') {
+                adminEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-lock" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h4 class="mt-3">Admin access only</h4>
+                        <p>Please login as admin to manage orders.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (orders.length === 0) {
+                adminEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-box-open" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h4 class="mt-3">No orders yet</h4>
+                        <p>Orders will appear here for management.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const adminHtml = `
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Total (TK)</th>
+                                <th>Payment</th>
+                                <th>Current Status</th>
+                                <th>Change Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.map(function(order, index) {
+                                const paymentText = order.paymentMethod
+                                    ? order.paymentMethod + ' (' + (order.paymentStatus || 'pending') + ')'
+                                    : 'Not set';
+                                return `
+                                    <tr>
+                                        <td>${order.id}</td>
+                                        <td>${order.customer && order.customer.name ? order.customer.name : 'Unknown'}</td>
+                                        <td>${order.total.toFixed(2)}</td>
+                                        <td>${paymentText}</td>
+                                        <td>
+                                            <span class="status-badge status-${order.status}">
+                                                ${order.status === 'on_transit' ? 'ON TRANSIT' : order.status.toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td style="max-width: 230px;">
+                                            <select class="form-select form-select-sm"
+                                                onchange="changeOrderStatus(${index}, this)">
+                                                ${STATUS_FLOW.map(function(st) {
+                                                    return `
+                                                    <option value="${st}" ${order.status === st ? 'selected' : ''}>
+                                                        ${st === 'on_transit'
+                                                            ? 'On Transit'
+                                                            : st.charAt(0).toUpperCase() + st.slice(1)}
+                                                    </option>`;
+                                                }).join('')}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            adminEl.innerHTML = adminHtml;
+        }
+
+        function changeOrderStatus(index, selectEl) {
+            const newStatus = selectEl.value;
+            const currentStatus = orders[index].status;
+
+            const currentIndex = STATUS_FLOW.indexOf(currentStatus);
+            const newIndex = STATUS_FLOW.indexOf(newStatus);
+
+            if (newIndex === -1) {
+                selectEl.value = currentStatus;
+                return;
+            }
+
+            if (newIndex < currentIndex) {
+                alert('You cannot move an order back to a previous step.');
+                selectEl.value = currentStatus;
+                return;
+            }
+
+            if (newIndex > currentIndex + 1) {
+                alert('Follow the flow: Pending → Confirmed → Preparing → On Transit → Delivered.');
+                selectEl.value = currentStatus;
+                return;
+            }
+
+            orders[index].status = newStatus;
+            saveToStorage();
+            renderAdminOrders();
+
+            if (document.getElementById('ordersSection').style.display !== 'none') {
+                renderOrders();
+            }
+        }
+    </script>
+</body>
+</html>
