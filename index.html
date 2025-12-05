@@ -306,17 +306,18 @@
     <script>
         const STATUS_FLOW = ['pending', 'confirmed', 'preparing', 'on_transit', 'delivered'];
 
+        /* UPDATED: use image file paths instead of emojis */
         const foodItems = [
-            {id: 1, name: 'Chicken Kacchi Biryani', price: 210, description: 'Fragrant dum-cooked biryani with tender chicken', image: '🍛'},
-            {id: 2, name: 'Chicken BBQ', price: 140, description: 'Smoky, tender grilled chicken', image: '🍗'},
-            {id: 3, name: 'Beef Rezala', price: 650, description: 'Juicy beef in creamy yogurt sauce', image: '🥩'},
-            {id: 4, name: 'Lamb Nihari', price: 550, description: 'Slow-cooked lamb in rich gravy', image: '🍖'},
-            {id: 5, name: 'French Fries', price: 150, description: 'Crispy golden fries', image: '🍟'},
-            {id: 6, name: 'Nachos', price: 150, description: 'Crunchy chips with cheese', image: '🧀'},
-            {id: 7, name: 'Pizza', price: 650, description: 'Fresh toppings on crispy crust', image: '🍕'},
-            {id: 8, name: 'Fried Chicken', price: 250, description: 'Crispy fried chicken pieces', image: '🍗'},
-            {id: 9, name: 'Grilled Chicken', price: 135, description: 'Healthy grilled chicken', image: '🍖'},
-            {id: 10, name: 'Burger', price: 350, description: 'Juicy burger with special sauce', image: '🍔'}
+            {id: 1, name: 'Chicken Kacchi Biryani', price: 210, description: 'Fragrant dum-cooked biryani with tender chicken', image: 'images/kacchi.jpg'},
+            {id: 2, name: 'Chicken BBQ', price: 140, description: 'Smoky, tender grilled chicken', image: 'images/bbq.jpg'},
+            {id: 3, name: 'Beef Rezala', price: 650, description: 'Juicy beef in creamy yogurt sauce', image: 'images/rezala.jpg'},
+            {id: 4, name: 'Lamb Nihari', price: 550, description: 'Slow-cooked lamb in rich gravy', image: 'images/nihari.jpg'},
+            {id: 5, name: 'French Fries', price: 150, description: 'Crispy golden fries', image: 'images/fries.jpg'},
+            {id: 6, name: 'Nachos', price: 150, description: 'Crunchy chips with cheese', image: 'images/nachos.jpg'},
+            {id: 7, name: 'Pizza', price: 650, description: 'Fresh toppings on crispy crust', image: 'images/pizza.jpg'},
+            {id: 8, name: 'Fried Chicken', price: 250, description: 'Crispy fried chicken pieces', image: 'images/fried_chicken.jpg'},
+            {id: 9, name: 'Grilled Chicken', price: 135, description: 'Healthy grilled chicken', image: 'images/grilled_chicken.jpg'},
+            {id: 10, name: 'Burger', price: 350, description: 'Juicy burger with special sauce', image: 'images/burger.jpg'}
         ];
 
         const accounts = [
@@ -470,13 +471,14 @@
             }
         }
 
+        /* UPDATED: show food pictures in cards */
         function renderMenu() {
             const menuHtml = foodItems.map(function(item) {
                 return `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card food-card">
+                        <img src="${item.image}" alt="${item.name}" class="img-fluid" style="height: 150px; width: 100%; object-fit: cover;">
                         <div class="card-body text-center">
-                            <div style="font-size: 5rem;">${item.image}</div>
                             <h5 class="card-title mt-2">${item.name}</h5>
                             <p class="card-text text-muted small">${item.description}</p>
                             <h6 class="text-success fw-bold">TK ${item.price.toFixed(2)}</h6>
@@ -585,7 +587,7 @@
                                 return `
                                 <tr>
                                     <td>
-                                        <span style="font-size: 1.5rem;">${item.image}</span>
+                                        <img src="${item.image}" alt="${item.name}" style="height:40px;width:40px;object-fit:cover;border-radius:4px;margin-right:6px;">
                                         <strong>${item.name}</strong>
                                     </td>
                                     <td>TK ${item.price.toFixed(2)}</td>
@@ -929,10 +931,10 @@
                                     <ul class="list-unstyled">
                                         ${order.items.map(function(item) {
                                             return `
-                                            <li class="mb-2">
-                                                <span style="font-size: 1.2rem;">${item.image}</span>
+                                            <li class="mb-2 d-flex align-items-center">
+                                                <img src="${item.image}" alt="${item.name}" style="height:32px;width:32px;object-fit:cover;border-radius:4px;margin-right:6px;">
                                                 ${item.name} x ${item.quantity}
-                                                <span class="text-muted">(TK ${(item.price * item.quantity).toFixed(2)})</span>
+                                                <span class="text-muted ms-1">(TK ${(item.price * item.quantity).toFixed(2)})</span>
                                             </li>`;
                                         }).join('')}
                                     </ul>
