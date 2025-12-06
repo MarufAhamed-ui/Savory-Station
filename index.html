@@ -292,34 +292,80 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info small">
-                        Demo credentials:<br>
-                        User: <strong>user</strong> / <strong>123456</strong><br>
-                        Admin: <strong>admin</strong> / <strong>admin123</strong>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Login as</label><br>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="loginRole" id="loginRoleUser" value="user" checked>
-                            <label class="form-check-label" for="loginRoleUser">User</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="loginRole" id="loginRoleAdmin" value="admin">
-                            <label class="form-check-label" for="loginRoleAdmin">Admin</label>
-                        </div>
+                    <div class="mb-2 small text-muted">
+                        Enter your username/email and password.  
+                        (If you use the admin account, you will be logged in as admin.)
                     </div>
                     <div class="mb-3">
                         <label for="loginEmail" class="form-label">Username / Email</label>
-                        <input type="text" class="form-control" id="loginEmail" placeholder="e.g. user or admin">
+                        <input type="text" class="form-control" id="loginEmail" placeholder="Enter username or email">
                     </div>
                     <div class="mb-3">
                         <label for="loginPassword" class="form-label">Password</label>
                         <input type="password" class="form-control" id="loginPassword" placeholder="Enter password">
                     </div>
+                    <div class="text-center mt-2 small">
+                        Don&apos;t have an account?
+                        <a href="#" onclick="openSignupFromLogin(event)">Sign up</a>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button class="btn btn-gradient" onclick="loginUser()"><i class="fas fa-right-to-bracket"></i> Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIGNUP MODAL -->
+    <div class="modal fade" id="signupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Sign Up</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="small text-muted mb-2">
+                        Create a customer account to order food.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="signupName" class="form-control" placeholder="Your full name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="signupUsername" class="form-control" placeholder="Choose a username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="signupEmail" class="form-control" placeholder="Your email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" id="signupPhone" class="form-control" placeholder="Your phone number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea id="signupAddress" class="form-control" rows="2" placeholder="Delivery address"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="signupPassword" class="form-control" placeholder="Choose a password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="signupConfirmPassword" class="form-control" placeholder="Confirm password">
+                    </div>
+                    <div class="small text-muted">
+                        Note: Sign up is only for <strong>user</strong> accounts. Admin account is fixed.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-gradient" onclick="signupUser()">
+                        <i class="fas fa-user-check"></i> Create Account
+                    </button>
                 </div>
             </div>
         </div>
@@ -344,16 +390,25 @@
             { id: 10, name: 'Burger', price: 350, description: 'Juicy cheese burger with veggies', image: 'images/burger.jfif' }
         ];
 
-        const accounts = [
-            {id: 1, name: 'Regular User', username: 'user', email: 'user@example.com', password: '123456', role: 'user'},
-            {id: 2, name: 'Admin User', username: 'admin', email: 'admin@example.com', password: 'admin123', role: 'admin'}
+        /* DEFAULT ACCOUNTS (will be stored in localStorage) */
+        const DEFAULT_ACCOUNTS = [
+            {id: 1, name: 'Maruf',   username: 'maruf',   email: 'maruf@example.com',   password: '1234', role: 'user', phone: '', address: ''},
+            {id: 2, name: 'Sajib',   username: 'sajib',   email: 'sajib@example.com',   password: '1234', role: 'user', phone: '', address: ''},
+            {id: 3, name: 'Famid',   username: 'famid',   email: 'famid@example.com',   password: '1234', role: 'user', phone: '', address: ''},
+            {id: 4, name: 'Munmun',  username: 'munmun',  email: 'munmun@example.com',  password: '1234', role: 'user', phone: '', address: ''},
+            {id: 5, name: 'Inzamam', username: 'inzamam', email: 'inzamam@example.com', password: '1234', role: 'user', phone: '', address: ''},
+
+            // Admin account (exists but not shown in UI)
+            {id: 99, name: 'Admin User', username: 'admin', email: 'admin@example.com', password: 'admin123', role: 'admin', phone: '', address: ''}
         ];
 
+        let accounts = [];
         let cart = [];
         let orders = [];
         let currentUser = null;
 
         document.addEventListener('DOMContentLoaded', function() {
+            loadAccounts();
             loadFromStorage();
             loadAuthFromSession();
             renderMenu();
@@ -374,9 +429,121 @@
                         renderAdminDashboard();
                         renderAdminOrders();
                     }
+                } else if (e.key === 'accounts') {
+                    loadAccounts();
                 }
             });
         });
+
+        /* ---------- ACCOUNTS (LOCALSTORAGE) ---------- */
+
+        function loadAccounts() {
+            const savedAccounts = localStorage.getItem('accounts');
+            if (savedAccounts) {
+                try {
+                    accounts = JSON.parse(savedAccounts);
+                    if (!Array.isArray(accounts)) throw new Error();
+                } catch {
+                    accounts = DEFAULT_ACCOUNTS.slice();
+                    saveAccounts();
+                }
+            } else {
+                accounts = DEFAULT_ACCOUNTS.slice();
+                saveAccounts();
+            }
+        }
+
+        function saveAccounts() {
+            localStorage.setItem('accounts', JSON.stringify(accounts));
+        }
+
+        function openSignupFromLogin(e) {
+            e.preventDefault();
+            const loginModalEl = document.getElementById('loginModal');
+            const loginModal = bootstrap.Modal.getInstance(loginModalEl);
+            if (loginModal) loginModal.hide();
+
+            const signupModal = new bootstrap.Modal(document.getElementById('signupModal'));
+            signupModal.show();
+        }
+
+        function signupUser() {
+            const name = document.getElementById('signupName').value.trim();
+            const username = document.getElementById('signupUsername').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
+            const address = document.getElementById('signupAddress').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+            if (!name || !username || !email || !phone || !address || !password || !confirmPassword) {
+                alert('Please fill all fields.');
+                return;
+            }
+
+            if (password.length < 4) {
+                alert('Password must be at least 4 characters.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            const userExists = accounts.some(function(u) {
+                return u.username === username || u.email === email;
+            });
+            if (userExists) {
+                alert('Username or email already exists. Please choose another.');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                name: name,
+                username: username,
+                email: email,
+                password: password,
+                role: 'user',
+                phone: phone,
+                address: address
+            };
+
+            accounts.push(newUser);
+            saveAccounts();
+
+            currentUser = {
+                id: newUser.id,
+                name: newUser.name,
+                role: newUser.role,
+                phone: newUser.phone,
+                address: newUser.address
+            };
+            saveAuthToSession();
+            updateAuthUI();
+
+            clearSignupForm();
+
+            const signupModalEl = document.getElementById('signupModal');
+            const signupModal = bootstrap.Modal.getInstance(signupModalEl);
+            if (signupModal) signupModal.hide();
+
+            showSection('menu');
+            alert('Account created successfully! You are now logged in as ' + newUser.name + '.');
+        }
+
+        function clearSignupForm() {
+            document.getElementById('signupName').value = '';
+            document.getElementById('signupUsername').value = '';
+            document.getElementById('signupEmail').value = '';
+            document.getElementById('signupPhone').value = '';
+            document.getElementById('signupAddress').value = '';
+            document.getElementById('signupPassword').value = '';
+            document.getElementById('signupConfirmPassword').value = '';
+        }
+
+        /* ---------- CART & ORDERS STORAGE ---------- */
 
         function loadFromStorage() {
             const savedCart = localStorage.getItem('cart');
@@ -433,10 +600,11 @@
             }
         }
 
+        /* ---------- COMBINED LOGIN (AUTO USER / ADMIN) ---------- */
+
         function loginUser() {
             const identifier = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
-            const role = document.querySelector('input[name="loginRole"]:checked').value;
 
             if (!identifier || !password) {
                 alert('Please enter username/email and password.');
@@ -445,8 +613,7 @@
 
             const user = accounts.find(function(u) {
                 return (u.username === identifier || u.email === identifier) &&
-                       u.password === password &&
-                       u.role === role;
+                       u.password === password;
             });
 
             if (!user) {
@@ -454,7 +621,13 @@
                 return;
             }
 
-            currentUser = { id: user.id, name: user.name, role: user.role };
+            currentUser = {
+                id: user.id,
+                name: user.name,
+                role: user.role,
+                phone: user.phone || '',
+                address: user.address || ''
+            };
             saveAuthToSession();
             updateAuthUI();
 
@@ -463,7 +636,7 @@
 
             const modalEl = document.getElementById('loginModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
-            modal.hide();
+            if (modal) modal.hide();
 
             if (currentUser.role === 'admin') {
                 showSection('admin');
@@ -501,7 +674,8 @@
             }
         }
 
-        /* SHOW FOOD PICTURES IN CARDS */
+        /* ---------- MENU & CART ---------- */
+
         function renderMenu() {
             const menuHtml = foodItems.map(function(item) {
                 return `
@@ -785,6 +959,8 @@
             }
         }
 
+        /* ---------- PLACE ORDER ---------- */
+
         function placeOrder() {
             if (cart.length === 0) return;
 
@@ -871,7 +1047,13 @@
                 total: total,
                 date: new Date().toISOString(),
                 status: 'pending',
-                customer: { id: currentUser.id, name: currentUser.name, role: currentUser.role },
+                customer: {
+                    id: currentUser.id,
+                    name: currentUser.name,
+                    role: currentUser.role,
+                    phone: currentUser.phone || '',
+                    address: currentUser.address || ''
+                },
                 paymentMethod: paymentMethod,
                 paymentStatus: paymentStatus,
                 paymentDetails: paymentDetails
@@ -887,6 +1069,8 @@
             const modal = new bootstrap.Modal(document.getElementById('successModal'));
             modal.show();
         }
+
+        /* ---------- MY ORDERS (USER + ADMIN VIEW) ---------- */
 
         function renderOrders() {
             const listEl = document.getElementById('ordersList');
@@ -936,6 +1120,9 @@
                     ? order.paymentMethod + ' (' + (order.paymentStatus || 'pending') + ')'
                     : 'Not set';
 
+                const customerPhone = order.customer && order.customer.phone ? order.customer.phone : '';
+                const customerAddress = order.customer && order.customer.address ? order.customer.address : '';
+
                 return `
                     <div class="card mb-4">
                         <div class="card-header bg-light">
@@ -943,7 +1130,11 @@
                                 <div class="col-md-4">
                                     <strong>Order #${order.id}</strong><br>
                                     <small class="text-muted">${new Date(order.date).toLocaleString()}</small><br>
-                                    <small class="text-muted">Customer: ${order.customer && order.customer.name ? order.customer.name : 'Unknown'}</small>
+                                    <small class="text-muted">
+                                        Customer: ${order.customer && order.customer.name ? order.customer.name : 'Unknown'}
+                                        ${customerPhone ? ' | ' + customerPhone : ''}
+                                    </small><br>
+                                    ${customerAddress ? `<small class="text-muted">Address: ${customerAddress}</small>` : ''}
                                 </div>
                                 <div class="col-md-4">
                                     <strong>Total: TK ${order.total.toFixed(2)}</strong><br>
@@ -1046,7 +1237,6 @@
                 });
             });
 
-            // detect top selling item
             Object.keys(itemCount).forEach(function(name) {
                 if (itemCount[name] > stats.topItemQty) {
                     stats.topItemQty = itemCount[name];
@@ -1129,7 +1319,7 @@
             `;
         }
 
-        /* ---------- ADMIN ORDER TABLE (existing) ---------- */
+        /* ---------- ADMIN ORDER TABLE ---------- */
 
         function renderAdminOrders() {
             const adminEl = document.getElementById('adminOrders');
@@ -1179,10 +1369,18 @@
                                         const paymentText = order.paymentMethod
                                             ? order.paymentMethod + ' (' + (order.paymentStatus || 'pending') + ')'
                                             : 'Not set';
+
+                                        const customerPhone = order.customer && order.customer.phone ? order.customer.phone : '';
+                                        const customerAddress = order.customer && order.customer.address ? order.customer.address : '';
+
                                         return `
                                             <tr>
                                                 <td>${order.id}</td>
-                                                <td>${order.customer && order.customer.name ? order.customer.name : 'Unknown'}</td>
+                                                <td>
+                                                    ${order.customer && order.customer.name ? order.customer.name : 'Unknown'}
+                                                    ${customerPhone ? `<br><small class="text-muted">Phone: ${customerPhone}</small>` : ''}
+                                                    ${customerAddress ? `<br><small class="text-muted">Address: ${customerAddress}</small>` : ''}
+                                                </td>
                                                 <td>${order.total.toFixed(2)}</td>
                                                 <td>${paymentText}</td>
                                                 <td>
