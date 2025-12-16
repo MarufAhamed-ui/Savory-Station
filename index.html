@@ -58,6 +58,9 @@
         .status-on_transit { background-color: #fd7e14; color: #fff; }
         .status-delivered { background-color: #6c757d; color: #fff; }
 
+        /* New: canceled status style */
+        .status-canceled { background-color: #dc3545; color: #fff; }
+
         .timeline {
             position: relative;
             padding: 20px 0;
@@ -374,6 +377,7 @@
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // STATUS_FLOW stays the same
         const STATUS_FLOW = ['pending', 'confirmed', 'preparing', 'on_transit', 'delivered'];
 
         /* YOUR FOOD PICTURES */
@@ -1166,26 +1170,37 @@
                                 <div class="col-md-6">
                                     <h6>Order Progress:</h6>
                                     <div class="timeline">
-                                        ${statusSteps.map(function(step, index) {
-                                            return `
-                                            <div class="timeline-item">
-                                                <div class="timeline-dot ${index <= currentStep ? 'active' : ''}"></div>
-                                                <div><strong>${
-                                                    step === 'on_transit'
-                                                        ? 'On Transit'
-                                                        : step.charAt(0).toUpperCase() + step.slice(1)
-                                                }</strong></div>
-                                                <small class="text-muted">
-                                                    ${
-                                                        step === 'pending' ? 'Order received' :
-                                                        step === 'confirmed' ? 'Restaurant confirmed' :
-                                                        step === 'preparing' ? 'Food being prepared' :
-                                                        step === 'on_transit' ? 'Order is on the way' :
-                                                        'Order completed'
-                                                    }
-                                                </small>
-                                            </div>`;
-                                        }).join('')}
+                                        ${
+                                            // If order was cancelled, show a single cancelled timeline item
+                                            order.status === 'canceled'
+                                                ? `
+                                                    <div class="timeline-item">
+                                                        <div class="timeline-dot active"></div>
+                                                        <div><strong>Cancelled</strong></div>
+                                                        <small class="text-muted">Order was cancelled by admin</small>
+                                                    </div>
+                                                `
+                                                : statusSteps.map(function(step, index) {
+                                                    return `
+                                                    <div class="timeline-item">
+                                                        <div class="timeline-dot ${index <= currentStep ? 'active' : ''}"></div>
+                                                        <div><strong>${
+                                                            step === 'on_transit'
+                                                                ? 'On Transit'
+                                                                : step.charAt(0).toUpperCase() + step.slice(1)
+                                                        }</strong></div>
+                                                        <small class="text-muted">
+                                                            ${
+                                                                step === 'pending' ? 'Order received' :
+                                                                step === 'confirmed' ? 'Restaurant confirmed' :
+                                                                step === 'preparing' ? 'Food being prepared' :
+                                                                step === 'on_transit' ? 'Order is on the way' :
+                                                                'Order completed'
+                                                            }
+                                                        </small>
+                                                    </div>`;
+                                                }).join('')
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -1390,7 +1405,7 @@
                                                 </td>
                                                 <td style="max-width: 230px;">
                                                     <select class="form-select form-select-sm"
-                                                        onchange="changeOrderStatus(${index}, this)">
+                                                        onchange="changeOrderStatus(${index}, this)" ${order.status === 'canceled' ? 'disabled' : ''}>
                                                         ${STATUS_FLOW.map(function(st) {
                                                             return `
                                                             <option value="${st}" ${order.status === st ? 'selected' : ''}>
@@ -1400,6 +1415,23 @@
                                                             </option>`;
                                                         }).join('')}
                                                     </select>
+
+                                                    ${
+                                                        // Cancel rules:
+                                                        // - cancelled: show badge
+                                                        // - delivered: show transparent-looking button (won't cancel; will show a message)
+                                                        // - others: normal cancel button
+                                                        order.status === 'canceled'
+                                                            ? `<span class="badge bg-danger ms-2">CANCELLED</span>`
+                                                            : (order.status === 'delivered'
+                                                                ? `<button class="btn btn-sm btn-outline-danger ms-2" style="opacity:0.35; cursor:not-allowed;" title="Delivered orders can't be cancelled" onclick="cancelOrder(event, ${index})">
+                                                                    <i class="fas fa-ban"></i> Cancel
+                                                                   </button>`
+                                                                : `<button class="btn btn-sm btn-outline-danger ms-2" onclick="cancelOrder(event, ${index})">
+                                                                    <i class="fas fa-ban"></i> Cancel
+                                                                   </button>`
+                                                              )
+                                                    }
                                                 </td>
                                             </tr>
                                         `;
@@ -1417,6 +1449,13 @@
         function changeOrderStatus(index, selectEl) {
             const newStatus = selectEl.value;
             const currentStatus = orders[index].status;
+
+            // Prevent changing status of a canceled order
+            if (currentStatus === 'canceled') {
+                alert('This order is cancelled and cannot be changed.');
+                selectEl.value = currentStatus;
+                return;
+            }
 
             const currentIndex = STATUS_FLOW.indexOf(currentStatus);
             const newIndex = STATUS_FLOW.indexOf(newStatus);
@@ -1443,6 +1482,35 @@
             renderAdminDashboard();
             renderAdminOrders();
 
+            if (document.getElementById('ordersSection').style.display !== 'none') {
+                renderOrders();
+            }
+        }
+
+        // New: allow admin to cancel an order
+        function cancelOrder(e, index) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+
+            const ord = orders[index];
+            if (!ord) return;
+
+            // Delivered orders cannot be cancelled
+            if (ord.status === 'delivered') {
+                alert("You can't cancel this order because it's already been delivered.");
+                return;
+            }
+
+            if (!confirm('Are you sure you want to cancel this order?')) return;
+
+            // Mark order canceled and adjust paymentStatus if needed
+            ord.status = 'canceled';
+            if (ord.paymentStatus === 'paid') {
+                ord.paymentStatus = 'refunded';
+            }
+            // save & re-render
+            saveToStorage();
+            renderAdminDashboard();
+            renderAdminOrders();
             if (document.getElementById('ordersSection').style.display !== 'none') {
                 renderOrders();
             }
