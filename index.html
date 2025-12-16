@@ -374,6 +374,23 @@
         </div>
     </div>
 
+
+    <!-- ADMIN ORDER ITEMS MODAL -->
+    <div class="modal fade" id="adminItemsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adminItemsTitle"><i class="fas fa-receipt"></i> Order Items</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="adminItemsBody"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -384,7 +401,7 @@
         const foodItems = [
             { id: 1, name: 'Chicken Kacchi Biryani', price: 210, description: 'Fragrant dum-cooked biryani with tender chicken', image: 'images/Hyderabadi Kacchi.jpg' },
             { id: 2, name: 'Chicken BBQ', price: 140, description: 'Smoky, tender grilled chicken', image: 'images/bbq.jpg' },
-            { id: 3, name: 'Chicken / Beef Curry', price: 650, description: 'Rich creamy curry in thick gravy', image: 'images/beef.jpg' },
+            { id: 3, name: 'Chicken Curry', price: 650, description: 'Rich creamy curry in thick gravy', image: 'images/beef.jpg' },
             { id: 4, name: 'Lamb Nihari', price: 550, description: 'Slow-cooked lamb in rich gravy', image: 'images/nehari.jpg' },
             { id: 5, name: 'French Fries', price: 150, description: 'Crispy golden fries with sauce', image: 'images/fries.jfif' },
             { id: 6, name: 'Nachos', price: 150, description: 'Cheesy loaded nachos with toppings', image: 'images/nachos.jpg' },
@@ -1376,6 +1393,7 @@
                                         <th>Total (TK)</th>
                                         <th>Payment</th>
                                         <th>Current Status</th>
+                                        <th>Items</th>
                                         <th>Change Status</th>
                                     </tr>
                                 </thead>
@@ -1402,6 +1420,11 @@
                                                     <span class="status-badge status-${order.status}">
                                                         ${order.status === 'on_transit' ? 'ON TRANSIT' : order.status.toUpperCase()}
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="showAdminOrderItems(${index})">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
                                                 </td>
                                                 <td style="max-width: 230px;">
                                                     <select class="form-select form-select-sm"
@@ -1486,6 +1509,87 @@
                 renderOrders();
             }
         }
+
+
+        /* ---------- ADMIN: VIEW ORDER ITEMS ---------- */
+
+        function showAdminOrderItems(index) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const order = orders[index];
+            if (!order) return;
+
+            const titleEl = document.getElementById('adminItemsTitle');
+            const bodyEl = document.getElementById('adminItemsBody');
+
+            const paymentText = order.paymentMethod
+                ? order.paymentMethod + ' (' + (order.paymentStatus || 'pending') + ')'
+                : 'Not set';
+
+            const customerPhone = order.customer && order.customer.phone ? order.customer.phone : '';
+            const customerAddress = order.customer && order.customer.address ? order.customer.address : '';
+
+            if (titleEl) {
+                titleEl.innerHTML = `<i class="fas fa-receipt"></i> Order #${order.id} Items`;
+            }
+
+            const itemsHtml = `
+                <div class="mb-3">
+                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                        <div>
+                            <div><strong>Customer:</strong> ${order.customer && order.customer.name ? order.customer.name : 'Unknown'}
+                                ${customerPhone ? ' | ' + customerPhone : ''}</div>
+                            ${customerAddress ? `<div class="text-muted small">Address: ${customerAddress}</div>` : ''}
+                            <div class="text-muted small">Placed: ${new Date(order.date).toLocaleString()}</div>
+                        </div>
+                        <div class="text-end">
+                            <div><strong>Total:</strong> TK ${order.total.toFixed(2)}</div>
+                            <div class="text-muted small">Payment: ${paymentText}</div>
+                            <div class="mt-1">
+                                <span class="status-badge status-${order.status}">
+                                    ${order.status === 'on_transit' ? 'ON TRANSIT' : order.status.toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-end">Unit</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${order.items.map(function(it) {
+                                const lineTotal = (it.price * it.quantity);
+                                return `
+                                    <tr>
+                                        <td>
+                                            <img src="${it.image}" alt="${it.name}"
+                                                style="height:36px;width:36px;object-fit:cover;border-radius:6px;margin-right:8px;">
+                                            <strong>${it.name}</strong>
+                                        </td>
+                                        <td class="text-end">TK ${it.price.toFixed(2)}</td>
+                                        <td class="text-center"><span class="badge bg-secondary">${it.quantity}</span></td>
+                                        <td class="text-end">TK ${lineTotal.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            if (bodyEl) bodyEl.innerHTML = itemsHtml;
+
+            const modal = new bootstrap.Modal(document.getElementById('adminItemsModal'));
+            modal.show();
+        }
+
 
         // New: allow admin to cancel an order
         function cancelOrder(e, index) {
